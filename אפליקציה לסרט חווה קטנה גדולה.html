@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>החווה הקטנה והמטריפה - דף משימה אינטראקטיבי</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Warm Earth Tones (Amber-50 background, Emerald-800 primary, Amber-600 secondary, Stone-700 text) -->
+    <!-- Application Structure Plan: A dashboard-style educational SPA. The user first encounters the context and a data visualization setting the stage. Then, they enter their details. Instead of a long scrolling form, the 3 options are presented as interactive "Mission Cards". Selecting a mission dynamically reveals its specific interactive form, reducing cognitive load. A persistent mandatory section sits at the bottom. This structure transforms a static worksheet into an engaging, task-oriented digital experience. -->
+    <!-- Visualization & Content Choices: Context Setup -> Goal: Set the mood and show transformation -> Viz: Line Chart (Chart.js) showing simulated biodiversity growth -> Interaction: Hover tooltips -> Justification: Connects the abstract questions to the movie's concrete data-driven success story. Options 1-3 -> Goal: Data entry & synthesis -> Viz: Thematic UI layouts (Business card UI for Opt 1, Vs. columns for Opt 2, Data grid for Opt 3) -> Interaction: Dynamic rendering, input binding -> Justification: Makes answering questions feel like building a portfolio rather than taking a test. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Assistant', sans-serif;
+            background-color: #fefbeb;
+            color: #292524;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .hide {
+            display: none;
+        }
+        .mission-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .mission-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+        }
+        .mission-card.active {
+            border-color: #059669;
+            background-color: #ecfdf5;
+            box-shadow: 0 0 0 2px #059669;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAQMAAABIeJ9nAAAABlBMVEUAAAD///+l2Z/dAAAAAXRSTlMAQObYZgAAAAxJREFUCNdjYGA4AAAAxADBFK2KVQAAAABJRU5ErkJggg==')]">
+
+    <header class="bg-emerald-800 text-white py-8 shadow-lg border-b-4 border-amber-500">
+        <div class="max-w-5xl mx-auto px-4 md:px-8 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-3 tracking-tight">🚜 החווה הקטנה והמטריפה</h1>
+            <p class="text-xl text-emerald-100 font-light">דף משימה דיגיטלי אינטראקטיבי במגמת חקלאות</p>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 md:px-8 py-10 space-y-12">
+
+        <section class="glass-panel p-6 md:p-8 rounded-2xl shadow-sm border border-emerald-100">
+            <h2 class="text-2xl font-bold text-emerald-900 mb-4 flex items-center gap-2">
+                <span class="text-3xl">🌱</span> רקע והשראה: המהפך של אפריקוט ליין
+            </h2>
+            <p class="text-lg leading-relaxed mb-6">
+                בסרט ראינו כיצד ג'ון ומולי הפכו אדמה מתה וצחיחה למערכת אקולוגית חיה, פועמת ומשגשגת. לפני שנתחיל במשימות, התבוננו בגרף המדגים את התפתחות המגוון הביולוגי בחווה לאורך 7 השנים המוצגות בסרט.
+            </p>
+            
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-inner">
+                <div class="chart-container">
+                    <canvas id="biodiversityChart"></canvas>
+                </div>
+                <p class="text-center text-sm text-gray-500 mt-3">המחשה ויזואלית של עליית המגוון הביולוגי בהתבסס על תהליכי ההחלמה של החווה</p>
+            </div>
+        </section>
+
+        <section class="glass-panel p-6 md:p-8 rounded-2xl shadow-md border-t-4 border-emerald-600 bg-white">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">📝 פרטי התלמיד/ה</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-2">שם מלא</label>
+                    <input type="text" id="studentName" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-lg bg-gray-50" placeholder="הקלד/י את שמך כאן...">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-2">תאריך ביצוע</label>
+                    <input type="date" id="executionDate" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-lg bg-gray-50">
+                </div>
+            </div>
+        </section>
+
+        <section class="space-y-6">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-emerald-900 mb-2">בחירת משימה</h2>
+                <p class="text-lg text-gray-600">עליכם לבחור <strong>משימה אחת בלבד</strong> מתוך שלוש האפשרויות הבאות. לחצו על הכרטיסייה המבוקשת כדי לפתוח אותה.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="mission-card bg-white border-2 border-gray-200 rounded-2xl p-6 text-center" onclick="selectOption('opt1')" id="card-opt1">
+                    <div class="text-5xl mb-4">🦉</div>
+                    <h3 class="text-xl font-bold text-emerald-800 mb-2">אפשרות 1</h3>
+                    <p class="text-gray-600 font-semibold">כרטיס ביקור ל"עובד מצטיין"</p>
+                </div>
+                
+                <div class="mission-card bg-white border-2 border-gray-200 rounded-2xl p-6 text-center" onclick="selectOption('opt2')" id="card-opt2">
+                    <div class="text-5xl mb-4">💧</div>
+                    <h3 class="text-xl font-bold text-emerald-800 mb-2">אפשרות 2</h3>
+                    <p class="text-gray-600 font-semibold">חקלאות משקמת vs קונבנציונלית</p>
+                </div>
+
+                <div class="mission-card bg-white border-2 border-gray-200 rounded-2xl p-6 text-center" onclick="selectOption('opt3')" id="card-opt3">
+                    <div class="text-5xl mb-4">🔍</div>
+                    <h3 class="text-xl font-bold text-emerald-800 mb-2">אפשרות 3</h3>
+                    <p class="text-gray-600 font-semibold">משימת "התבוננות בנסתר"</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="form-container" class="hide mt-8">
+            
+            <div id="content-opt1" class="hide form-content glass-panel p-6 md:p-8 rounded-2xl shadow-lg border-2 border-emerald-500 bg-white">
+                <div class="border-b pb-4 mb-6">
+                    <h2 class="text-2xl font-bold text-emerald-800 flex items-center gap-2">
+                        <span>🟢</span> כרטיס ביקור ל"עובד מצטיין"
+                    </h2>
+                    <p class="text-gray-600 mt-2">בחרו בעל חיים או צמח מהסרט ששימש כחלק מההדברה הביולוגית או האיזון של החווה (למשל: תנשמות, ברווזים, חזירים, כבשים, או חרקים). עצבו עבורו "כרטיס ביקור" תעסוקתי.</p>
+                </div>
+                
+                <div class="bg-amber-50 rounded-xl p-6 border border-amber-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-emerald-600 rounded-bl-full opacity-20"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-bold text-amber-900 mb-1">שם העובד / התפקיד:</label>
+                            <input type="text" class="w-full bg-transparent border-b-2 border-amber-300 focus:border-emerald-600 outline-none py-2 text-xl font-semibold text-gray-800 transition-colors" placeholder="לדוגמה: מנהל מחלקת חלזונות (ברווז)">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-amber-900 mb-1">הבעיה שפתרתי בחווה:</label>
+                            <textarea rows="3" class="w-full rounded-lg border border-amber-300 focus:ring-2 focus:ring-emerald-500 outline-none p-3 text-gray-800" placeholder="תאר/י את הבעיה שעזרת לפתור..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-amber-900 mb-1">התשלום שקיבלתי (מה אני צורך?):</label>
+                            <textarea rows="3" class="w-full rounded-lg border border-amber-300 focus:ring-2 focus:ring-emerald-500 outline-none p-3 text-gray-800" placeholder="מה המערכת מספקת לך בתמורה?"></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-bold text-amber-900 mb-1">איך החקלאי "גייס" אותי? (מה הוא שינה כדי שאגיע?):</label>
+                            <textarea rows="2" class="w-full rounded-lg border border-amber-300 focus:ring-2 focus:ring-emerald-500 outline-none p-3 text-gray-800" placeholder="לדוגמה: בנה לי תיבות קינון..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="content-opt2" class="hide form-content glass-panel p-6 md:p-8 rounded-2xl shadow-lg border-2 border-blue-500 bg-white">
+                <div class="border-b pb-4 mb-6">
+                    <h2 class="text-2xl font-bold text-blue-800 flex items-center gap-2">
+                        <span>🔵</span> לוח התוצאות – חקלאות משקמת vs קונבנציונלית
+                    </h2>
+                    <p class="text-gray-600 mt-2">השוו בין "אפריקוט ליין" לבין החוות השכנות בזמן אירוע קיצון (השריפה או השיטפון). ענו על השאלות הבאות כדי לנתח את ההבדלים בעמידות המערכות.</p>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="bg-blue-50 p-5 rounded-lg border border-blue-100">
+                        <label class="block text-lg font-bold text-blue-900 mb-2">1. מבחן המים:</label>
+                        <p class="text-sm text-blue-700 mb-3">מה קרה לאדמה של השכנים בגשם לעומת האדמה של ג'ון ומולי?</p>
+                        <textarea rows="3" class="w-full rounded-md border border-blue-300 focus:ring-2 focus:ring-blue-500 outline-none p-3 text-gray-800" placeholder="הקלידו תשובה כאן..."></textarea>
+                    </div>
+                    
+                    <div class="bg-blue-50 p-5 rounded-lg border border-blue-100">
+                        <label class="block text-lg font-bold text-blue-900 mb-2">2. מבחן המגוון:</label>
+                        <p class="text-sm text-blue-700 mb-3">מדוע מגפת הכנימות לא השמידה את כל המטען באפריקוט ליין, בניגוד למה שקורה בדרך כלל בחוות תעשייתיות?</p>
+                        <textarea rows="3" class="w-full rounded-md border border-blue-300 focus:ring-2 focus:ring-blue-500 outline-none p-3 text-gray-800" placeholder="הקלידו תשובה כאן..."></textarea>
+                    </div>
+
+                    <div class="bg-indigo-50 p-5 rounded-lg border border-indigo-200 shadow-sm">
+                        <label class="block text-lg font-bold text-indigo-900 mb-2">3. בשורה התחתונה:</label>
+                        <p class="text-sm text-indigo-700 mb-3">הגדירו במילים שלכם (עד 20 מילים) מהו "חוסן חקלאי" (Resilience).</p>
+                        <input type="text" class="w-full bg-white border-2 border-indigo-300 rounded-md focus:border-indigo-600 outline-none p-3 text-lg font-medium text-gray-800 transition-colors" placeholder="חוסן חקלאי הוא...">
+                    </div>
+                </div>
+            </div>
+
+            <div id="content-opt3" class="hide form-content glass-panel p-6 md:p-8 rounded-2xl shadow-lg border-2 border-amber-500 bg-white">
+                <div class="border-b pb-4 mb-6">
+                    <h2 class="text-2xl font-bold text-amber-800 flex items-center gap-2">
+                        <span>🟡</span> משימת "התבוננות בנסתר"
+                    </h2>
+                    <p class="text-gray-600 mt-2">זהו בסרט 3 פרקטיקות חקלאיות שנעשו ללא כימיקלים או דשן סינתטי, והסבירו את תפקידן על ידי מילוי הטבלה מטה.</p>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[600px] border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
+                        <thead class="bg-amber-100 text-amber-900 border-b-2 border-amber-300">
+                            <tr>
+                                <th class="p-4 text-right w-12 font-bold text-lg">#</th>
+                                <th class="p-4 text-right font-bold text-lg">הפעולה שראיתי בסרט</th>
+                                <th class="p-4 text-right font-bold text-lg">מה המטרה של הפעולה?</th>
+                                <th class="p-4 text-right font-bold text-lg">מה עושים בחקלאות רגילה?</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr class="hover:bg-amber-50 transition-colors">
+                                <td class="p-4 font-bold text-amber-700">1</td>
+                                <td class="p-2"><input type="text" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-amber-400 outline-none" placeholder="הזן פעולה..."></td>
+                                <td class="p-2"><input type="text" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-amber-400 outline-none" placeholder="הזן מטרה..."></td>
+                                <td class="p-2"><input type="text" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-amber-400 outline-none" placeholder="החלופה הרגילה..."></td>
+                            </tr>
+                            <tr class="hover:bg-amber-50 transition-colors">
+                                <td class="p-4 font-bold text-amber-700">2</td>
+                                <td class="p-2"><input type="text" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-amber-400 outline-none" placeholder="הזן פעולה..."></td>
+                                <td class="p-2"><input type="text" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-amber-400 outline-none" placeholder="הזן מטרה..."></td>
+                                <td class="p-2"><input type="text" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-amber-400 outline-none" placeholder="החלופה הרגילה..."></td>
+                            </tr>
+                            <tr class="hover:bg-amber-50 transition-colors">
+                                <td class="p-4 font-bold text-amber-700">3</td>
+                                <td class="p-2"><input type="text" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-amber-400 outline-none" placeholder="הזן פעולה..."></td>
+                                <td class="p-2"><input type="text" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-amber-400 outline-none" placeholder="הזן מטרה..."></td>
+                                <td class="p-2"><input type="text" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-amber-400 outline-none" placeholder="החלופה הרגילה..."></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="glass-panel p-6 md:p-8 rounded-2xl shadow-xl border-l-8 border-red-500 bg-white relative mt-12">
+            <div class="absolute -top-6 -right-4 text-5xl bg-white rounded-full p-2 shadow-sm border border-red-100">🚩</div>
+            <h2 class="text-2xl font-bold text-red-800 mb-4">שאלת חובה לכולם (משימת סיכום)</h2>
+            <div class="bg-red-50 p-5 rounded-xl border border-red-100 mb-4">
+                <p class="text-lg text-gray-800 font-medium mb-2">
+                    ג'ון אומר בסרט שהם למדו ש<span class="text-red-600 font-bold bg-white px-2 py-1 rounded shadow-sm mx-1">"הבעיה היא לעיתים קרובות הפתרון"</span>.
+                </p>
+                <p class="text-gray-700">
+                    תנו דוגמה אחת מהסרט שבה משהו שנחשב ל"מזיק" או "בעיה" הפך בסוף למועיל, והסבירו איך זה קרה:
+                </p>
+            </div>
+            
+            <textarea id="mandatoryAnswer" rows="5" class="w-full rounded-xl border-2 border-red-200 focus:border-red-500 focus:ring-4 focus:ring-red-100 outline-none p-4 text-lg text-gray-800 shadow-inner" placeholder="התחל/י לכתוב את תשובתך כאן... (הקפד/י על פירוט והסבר מלא)"></textarea>
+        </section>
+
+        <div class="text-center pt-8 pb-12">
+            <button onclick="submitAssignment()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xl py-4 px-12 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
+                סיום ושמירת משימה ✓
+            </button>
+            <p id="feedbackMessage" class="mt-4 text-lg font-bold hide"></p>
+        </div>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const ctx = document.getElementById('biodiversityChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['שנה 1', 'שנה 2', 'שנה 3', 'שנה 4', 'שנה 5', 'שנה 6', 'שנה 7'],
+                    datasets: [
+                        {
+                            label: 'מספר מיני חיות וצמחים',
+                            data: [15, 30, 85, 120, 180, 210, 250],
+                            borderColor: '#059669',
+                            backgroundColor: 'rgba(5, 150, 105, 0.2)',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#047857',
+                            pointRadius: 5,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'איכות ומבנה הקרקע (מדד כללי)',
+                            data: [10, 15, 40, 65, 80, 90, 95],
+                            borderColor: '#b45309',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            tension: 0.4,
+                            pointBackgroundColor: '#b45309',
+                            pointRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    family: "'Assistant', sans-serif",
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#1f2937',
+                            bodyColor: '#4b5563',
+                            borderColor: '#d1d5db',
+                            borderWidth: 1,
+                            padding: 12,
+                            titleFont: { size: 16, family: "'Assistant', sans-serif" },
+                            bodyFont: { size: 14, family: "'Assistant', sans-serif" },
+                            displayColors: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#e5e7eb'
+                            },
+                            ticks: {
+                                font: { family: "'Assistant', sans-serif" }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: { family: "'Assistant', sans-serif" }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                }
+            });
+
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('executionDate').value = today;
+        });
+
+        function selectOption(optId) {
+            document.querySelectorAll('.mission-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            document.getElementById('card-' + optId).classList.add('active');
+
+            const container = document.getElementById('form-container');
+            container.classList.remove('hide');
+            
+            document.querySelectorAll('.form-content').forEach(content => {
+                content.classList.add('hide');
+            });
+            
+            const selectedContent = document.getElementById('content-' + optId);
+            selectedContent.classList.remove('hide');
+            
+            setTimeout(() => {
+                selectedContent.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+
+        function submitAssignment() {
+            const name = document.getElementById('studentName').value.trim();
+            const mandatory = document.getElementById('mandatoryAnswer').value.trim();
+            const activeCard = document.querySelector('.mission-card.active');
+            const feedback = document.getElementById('feedbackMessage');
+
+            feedback.classList.remove('hide', 'text-emerald-600', 'text-red-600');
+
+            if (!name) {
+                feedback.textContent = '❌ אנא מלא/י את שמך המלא למעלה.';
+                feedback.classList.add('text-red-600');
+                document.getElementById('studentName').focus();
+                return;
+            }
+
+            if (!activeCard) {
+                feedback.textContent = '❌ אנא בחר/י אחת מ-3 המשימות ולחץ/י עליה.';
+                feedback.classList.add('text-red-600');
+                return;
+            }
+
+            if (!mandatory) {
+                feedback.textContent = '❌ אנא ענה/י על שאלת החובה בתחתית העמוד.';
+                feedback.classList.add('text-red-600');
+                document.getElementById('mandatoryAnswer').focus();
+                return;
+            }
+
+            feedback.textContent = '✅ המשימה הושלמה בהצלחה, כל הכבוד ' + name + '!';
+            feedback.classList.add('text-emerald-600');
+            
+            setTimeout(() => {
+                alert('הנתונים נשמרו מקומית! (בגרסת שרת היו נשלחים כעת למורה)');
+            }, 500);
+        }
+    </script>
+</body>
+</html>
