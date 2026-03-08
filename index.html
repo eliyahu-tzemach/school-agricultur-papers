@@ -34,36 +34,14 @@
         </div>
     </header>
 
-    <!-- Teacher View -->
-    <section id="teacher-view" class="hide bg-slate-900 text-white p-8 min-h-screen fixed inset-0 z-50 overflow-y-auto">
-        <div class="max-w-6xl mx-auto">
-            <div class="flex justify-between items-center mb-8 border-b border-slate-700 pb-4">
-                <h2 class="text-3xl font-bold text-amber-400">מעקב תשובות (מערכת ענן)</h2>
-                <button onclick="toggleTeacherView()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-bold">סגור לוח בקרה</button>
-            </div>
-            <div id="results-loader" class="flex flex-col items-center py-20"><div class="loading-spinner w-12 h-12 mb-4 border-t-amber-500"></div></div>
-            <div id="results-table-container" class="hide overflow-x-auto">
-                <table class="w-full text-right border-collapse bg-slate-800 rounded-xl">
-                    <thead>
-                        <tr class="bg-slate-700 text-amber-300">
-                            <th class="p-4 border-b border-slate-600">שם תלמיד</th>
-                            <th class="p-4 border-b border-slate-600">משימה שנבחרה</th>
-                            <th class="p-4 border-b border-slate-600">שאלת חובה</th>
-                            <th class="p-4 border-b border-slate-600">זמן שליחה</th>
-                        </tr>
-                    </thead>
-                    <tbody id="results-body"></tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
     <main class="max-w-5xl mx-auto px-4 py-10 space-y-12">
+        <!-- גרף מגוון ביולוגי -->
         <section class="glass-panel p-6 rounded-2xl shadow-sm border border-emerald-100">
             <h2 class="text-2xl font-bold text-emerald-900 mb-4">🌱 מגוון ביולוגי בחווה</h2>
             <div class="h-[200px] bg-white p-2 rounded-lg"><canvas id="biodiversityChart"></canvas></div>
         </section>
 
+        <!-- פרטי תלמיד -->
         <section class="glass-panel p-6 rounded-2xl bg-white border-t-4 border-emerald-600 shadow-md">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -77,6 +55,7 @@
             </div>
         </section>
 
+        <!-- בחירת משימה -->
         <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="mission-card bg-white p-6 rounded-2xl text-center shadow-sm" id="card-opt1" onclick="selectOption('opt1')">
                 <div class="text-5xl mb-3">🦉</div>
@@ -107,6 +86,7 @@
             </div>
         </section>
 
+        <!-- שאלת חובה -->
         <section class="glass-panel p-8 rounded-2xl border-l-8 border-red-500 bg-white shadow-lg">
             <h3 class="text-xl font-bold text-red-800 mb-2">🚩 שאלת חובה</h3>
             <p class="text-sm text-gray-500 mb-4">"הבעיה היא הפתרון" - תנו דוגמה מהסרט:</p>
@@ -127,9 +107,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ==========================================
-        // שלב 1: הדבק כאן את ה-Web App URL שקיבלת מגוגל
-        // ==========================================
+        // תיקון: הכתובת עטופה בגרשיים
         const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbz3Aj1i69JmMR0Bd60fW9crx4rfdDaNq0fLTJLj6KV88NkQ0Yav7lpbafkgGf8kDUUS/exec"; 
 
         const firebaseConfig = JSON.parse(__firebase_config);
@@ -137,7 +115,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // תיקון קריטי: ניקוי ה-appId מתווים לא חוקיים כמו נקודות (למניעת שגיאת נתיב)
         let rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'farm-sheets-v1';
         const appId = rawAppId.replace(/[.#$\[\]]/g, '_'); 
 
@@ -151,7 +128,7 @@
                     await signInAnonymously(auth);
                 }
             } catch (error) {
-                console.error("Authentication error:", error);
+                console.error("Auth error:", error);
             }
         };
 
@@ -169,7 +146,6 @@
         async function loadStudentData(uid) {
             if (!uid || !appId) return;
             try {
-                // נתיב קבוע: artifacts/{appId}/public/data/{uid} (6 מקטעים - זוגי)
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', uid);
                 const snap = await getDoc(docRef);
                 if (snap.exists()) {
@@ -181,9 +157,7 @@
                     document.getElementById('opt3-ans').value = d.opt3Ans || "";
                     document.getElementById('mandatoryAnswer').value = d.mandatoryAnswer || "";
                 }
-            } catch (error) {
-                console.error("Error loading data:", error);
-            }
+            } catch (error) { console.error(error); }
         }
 
         window.saveData = async () => {
@@ -194,6 +168,7 @@
             
             btn.disabled = true;
             spinner.classList.remove('hidden');
+            status.innerText = "שולח נתונים...";
             
             const activeCard = document.querySelector('.mission-card.active');
             const activeId = activeCard ? activeCard.id.replace('card-', '') : '';
@@ -212,26 +187,30 @@
             };
 
             try {
-                // שמירה ב-Firestore
+                // 1. שמירה ב-Firestore
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', user.uid);
                 await setDoc(docRef, payload);
                 
-                // שליחה ל-Google Sheets
-                if (GOOGLE_SHEET_URL && GOOGLE_SHEET_URL.startsWith("https")) {
+                // 2. שליחה ל-Google Sheets (עם טיפול בשגיאות)
+                if (GOOGLE_SHEET_URL) {
+                    // יצירת טופס וירטואלי לשליחה אמינה יותר
+                    const formData = new FormData();
+                    for (const key in payload) {
+                        formData.append(key, payload[key]);
+                    }
+
                     await fetch(GOOGLE_SHEET_URL, {
                         method: 'POST',
-                        mode: 'no-cors',
-                        cache: 'no-cache',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        mode: 'no-cors', 
+                        body: formData
                     });
                 }
 
-                status.innerText = "העבודה נשלחה ונשמרה בגיליון הגוגל! 🎉";
+                status.innerText = "העבודה נשלחה ונשמרה בהצלחה! 🎉";
                 status.style.color = "#059669";
             } catch (e) {
                 console.error("Save error:", e);
-                status.innerText = "שגיאה בשמירה. וודאו שהגדרתם את ה-URL נכון.";
+                status.innerText = "שגיאה בשמירה. נסה שוב.";
                 status.style.color = "#dc2626";
             } finally {
                 btn.disabled = false;
@@ -248,36 +227,6 @@
             const content = document.getElementById('content-' + id);
             if(content) content.classList.remove('hide');
         };
-
-        window.toggleTeacherView = () => {
-            const view = document.getElementById('teacher-view');
-            if (view.classList.contains('hide')) {
-                const pass = prompt("סיסמת מורה:");
-                if (pass === "1234") { view.classList.remove('hide'); loadAllResults(); }
-            } else { view.classList.add('hide'); }
-        };
-
-        function loadAllResults() {
-            if (!appId) return;
-            const collRef = collection(db, 'artifacts', appId, 'public', 'data');
-            onSnapshot(collRef, (snap) => {
-                const body = document.getElementById('results-body');
-                body.innerHTML = "";
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    body.innerHTML += `<tr class="border-b border-slate-700 hover:bg-slate-700">
-                        <td class="p-4 font-bold text-amber-100">${d.studentName || 'אנונימי'}</td>
-                        <td class="p-4 text-sm">${d.selectedOption ? d.selectedOption.replace('card-','') : '-'}</td>
-                        <td class="p-4 text-xs max-w-xs truncate">${d.mandatoryAnswer || '-'}</td>
-                        <td class="p-4 text-xs opacity-60">${d.timestamp || '-'}</td>
-                    </tr>`;
-                });
-                document.getElementById('results-loader').classList.add('hide');
-                document.getElementById('results-table-container').classList.remove('hide');
-            }, (error) => {
-                console.error("Snapshot error:", error);
-            });
-        }
 
         document.getElementById('save-btn').onclick = window.saveData;
 
@@ -301,4 +250,3 @@
     </script>
 </body>
 </html>
-
